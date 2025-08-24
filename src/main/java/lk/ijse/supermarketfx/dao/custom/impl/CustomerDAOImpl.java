@@ -4,16 +4,13 @@ import lk.ijse.supermarketfx.bo.exception.NotFoundException;
 import lk.ijse.supermarketfx.config.FactoryConfiguration;
 import lk.ijse.supermarketfx.dao.SQLUtil;
 import lk.ijse.supermarketfx.dao.custom.CustomerDAO;
-import lk.ijse.supermarketfx.dto.CustomerDTO;
 import lk.ijse.supermarketfx.entity.Customer;
-import lk.ijse.supermarketfx.util.CrudUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
