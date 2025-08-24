@@ -1,6 +1,8 @@
 # Supermarket System - Layered Architecture
 
-A JavaFX application demonstrating a layered architecture for a simple supermarket management system. This project is developed as part of the curriculum for the **Graduate Diploma in Software Engineering (GDSE)** course for the GDSE-74 batch at IJSE.
+A JavaFX application demonstrating a layered architecture for a simple supermarket management system. This project is developed as part of the curriculum for the **Graduate Diploma in Software Engineering (GDSE)** course for the GDSE-73 batch at IJSE.
+
+(_Cloned by @ybdevo (Student)_, belongs to @shamodhas)
 
 ---
 
