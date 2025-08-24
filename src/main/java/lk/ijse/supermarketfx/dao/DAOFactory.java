@@ -3,8 +3,6 @@ package lk.ijse.supermarketfx.dao;
 import lk.ijse.supermarketfx.dao.custom.impl.*;
 
 
-// DAOFactory (Interface with getDAO method)
-//     <- DAOFactoryImpl (concentrate implication)
 
 public class DAOFactory {
     private static DAOFactory daoFactory;
@@ -17,7 +15,6 @@ public class DAOFactory {
     }
 
     @SuppressWarnings("unchecked")
-    // prevent compiler warning about unchecked type casting
     public <T extends SuperDAO> T getDAO(DAOTypes daoType) {
         return switch (daoType) {
             case CUSTOMER -> (T) new CustomerDAOImpl();
@@ -26,19 +23,5 @@ public class DAOFactory {
             case ORDER_DETAILS -> (T) new OrderDetailDAOImpl();
             case QUERY -> (T) new QueryDAOImpl();
         };
-//        switch (daoType) {
-//            case CUSTOMER:
-//                return (T) new CustomerDAOImpl();
-//            case ITEM:
-//                return (T) new ItemDAOImpl();
-//            case ORDER:
-//                return (T) new OrderDAOImpl();
-//            case ORDER_DETAILS:
-//                return (T) new OrderDetailDAOImpl();
-//            case QUERY:
-//                return (T) new QueryDAOImpl();
-//            default:
-//                return null;
-//        }
     }
 }

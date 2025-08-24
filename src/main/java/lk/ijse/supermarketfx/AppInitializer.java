@@ -20,17 +20,6 @@ import lk.ijse.supermarketfx.entity.Customer;
 
 public class AppInitializer extends Application {
     public static void main(String[] args) {
-//        DAOFactory.getInstance().getDAO(DAOTypes.CUSTOMER);
-
-        // Boy Girl Agreement
-        // Agreement = Girl
-//        SuperDAO dao = new OrderDAOImpl();
-//        DAOFactory daoFactory = DAOFactory.getInstance();
-//        daoFactory.getDAO(DAOTypes.CUSTOMER);
-//
-//        CustomerDAO customerDAO = DAOFactory.getInstance().getDAO(DAOTypes.CUSTOMER);
-//        OrderDAO orderDAO = DAOFactory.getInstance().getDAO(DAOTypes.ORDER);
-
         launch(args);
     }
 
