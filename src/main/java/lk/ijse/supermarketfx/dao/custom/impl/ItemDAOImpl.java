@@ -24,7 +24,10 @@ public class ItemDAOImpl implements ItemDAO {
 
     @Override
     public String getLastId() {
-        return "";
+        Session session = factoryConfiguration.getSession();
+        String lastId = session.createQuery("SELECT i.id FROM Item i ORDER BY i.id DESC", String.class).setMaxResults(1).uniqueResult();
+        session.close();
+        return lastId == null ? "I001" : lastId;
     }
 
     @Override
