@@ -124,11 +124,10 @@ public class CustomerDAOImpl implements CustomerDAO {
     @Override
     public Optional<Customer> findCustomerByNic(String nic) throws SQLException {
         Session session = factoryConfiguration.getSession();
-        Query<Customer> query = session.createQuery("from Customer where nic = ?1", Customer.class);
-        query.setParameter(1, nic);
+        Query<Customer> query = session.createQuery("from Customer where nic = :nic", Customer.class);
+        query.setParameter("nic", nic);
         session.close();
-        List<Customer> list = query.list();
-        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+        return query.list().isEmpty() ? Optional.empty() : Optional.of(query.list().get(0));
     }
 
     @Override
