@@ -1,5 +1,6 @@
 package lk.ijse.supermarketfx.dao.custom.impl;
 
+import lk.ijse.supermarketfx.bo.exception.NotFoundException;
 import lk.ijse.supermarketfx.config.FactoryConfiguration;
 import lk.ijse.supermarketfx.dao.SQLUtil;
 import lk.ijse.supermarketfx.dao.custom.CustomerDAO;
@@ -8,6 +9,7 @@ import lk.ijse.supermarketfx.entity.Customer;
 import lk.ijse.supermarketfx.util.CrudUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,31 +20,21 @@ import java.util.Optional;
 public class CustomerDAOImpl implements CustomerDAO {
 
     private final FactoryConfiguration factoryConfiguration = FactoryConfiguration.getInstance();
+
     @Override
     public List<Customer> getAll() throws SQLException {
-        ResultSet resultSet = SQLUtil.execute("SELECT * FROM customer");
-
-        List<Customer> list = new ArrayList<>();
-        while (resultSet.next()) {
-            Customer customer = new Customer(
-                    resultSet.getString(1),
-                    resultSet.getString(2),
-                    resultSet.getString(3),
-                    resultSet.getString(4),
-                    resultSet.getString(5)
-            );
-            list.add(customer);
-        }
-        return list;
+        Session session = factoryConfiguration.getSession();
+        Query<Customer> query = session.createQuery("from Customer", Customer.class);
+        session.close();
+        return query.list();
     }
 
     @Override
     public String getLastId() throws SQLException {
-        ResultSet resultSet = SQLUtil.execute("SELECT customer_id FROM customer ORDER BY customer_id DESC LIMIT 1");
-        if (resultSet.next()) {
-            return resultSet.getString(1);
-        }
-        return null;
+        Session session = factoryConfiguration.getSession();
+        String lastId = session.createQuery("SELECT c.id FROM Customer c ORDER BY c.id DESC", String.class).setMaxResults(1).uniqueResult();
+        session.close();
+        return lastId == null ? "C001" : lastId;
     }
 
     @Override
@@ -63,44 +55,54 @@ public class CustomerDAOImpl implements CustomerDAO {
 
     @Override
     public boolean update(Customer customer) throws SQLException {
-        return SQLUtil.execute(
-                "UPDATE customer SET name = ?, nic = ?, email = ?, phone = ? WHERE customer_id = ?",
-                customer.getName(),
-                customer.getNic(),
-                customer.getEmail(),
-                customer.getPhone(),
-                customer.getId()
-        );
+        Session session = factoryConfiguration.getSession();
+        Transaction transaction = session.beginTransaction();
+        try {
+            session.merge(customer);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            transaction.rollback();
+            return false;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public boolean delete(String id) throws SQLException {
-        return SQLUtil.execute("DELETE FROM customer WHERE customer_id = ?", id);
+        Session session = factoryConfiguration.getSession();
+        Transaction transaction = session.beginTransaction();
+        try {
+            Customer customer = session.get(Customer.class, id);
+            if (customer != null) {
+                throw new NotFoundException("Customer not found..!");
+            }
+            session.remove(customer);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            transaction.rollback();
+            return false;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public List<String> getAllIds() throws SQLException {
-        ResultSet resultSet = SQLUtil.execute("SELECT customer_id FROM customer");
-        List<String> ids = new ArrayList<>();
-        while (resultSet.next()) {
-            ids.add(resultSet.getString(1));
-        }
-        return ids;
+        Session session = factoryConfiguration.getSession();
+        Query<String> query = session.createQuery("SELECT c.id FROM Customer c", String.class);
+        session.close();
+        return query.list();
     }
 
     @Override
     public Optional<Customer> findById(String id) throws SQLException {
-        ResultSet resultSet = SQLUtil.execute("SELECT * FROM customer WHERE customer_id = ?", id);
-        if (resultSet.next()) {
-            return Optional.of(new Customer(
-                    resultSet.getString(1),
-                    resultSet.getString(2),
-                    resultSet.getString(3),
-                    resultSet.getString(4),
-                    resultSet.getString(5)
-            ));
-        }
-        return Optional.empty();
+        Session session = factoryConfiguration.getSession();
+        Customer customer = session.get(Customer.class, id);
+        session.close();
+        return Optional.of(customer);
     }
 
     @Override
@@ -111,43 +113,33 @@ public class CustomerDAOImpl implements CustomerDAO {
                 searchText, searchText, searchText, searchText, searchText
         );
 
-        List<Customer> list = new ArrayList<>();
-        while (resultSet.next()) {
-            Customer customer = new Customer(
-                    resultSet.getString(1),
-                    resultSet.getString(2),
-                    resultSet.getString(3),
-                    resultSet.getString(4),
-                    resultSet.getString(5)
-            );
-            list.add(customer);
-        }
-        return list;
+        Session session = factoryConfiguration.getSession();
+        Query <Customer> query = session.createQuery("FROM Customer WHERE id LIKE ? OR name LIKE ? OR nic LIKE ? OR email LIKE ? OR phone LIKE ?", Customer.class);
+        query.setParameter(1, "%something%");
+        query.setParameter(2, "%something%");
+        query.setParameter(3, "%something%");
+        query.setParameter(4, "%something%");
+        query.setParameter(5, "%something%");
+        session.close();
+        return query.list();
     }
 
     @Override
     public Optional<Customer> findCustomerByNic(String nic) throws SQLException {
-        ResultSet resultSet = SQLUtil.execute("SELECT * FROM customer WHERE nic = ?", nic);
-        if (resultSet.next()) {
-            return Optional.of(new Customer(
-                    resultSet.getString(1),
-                    resultSet.getString(2),
-                    resultSet.getString(3),
-                    resultSet.getString(4),
-                    resultSet.getString(5)
-            ));
-        }
-        return Optional.empty();
+        Session session = factoryConfiguration.getSession();
+        Query<Customer> query = session.createQuery("from Customer where nic = ?1", Customer.class);
+        query.setParameter(1, nic);
+        session.close();
+        List<Customer> list = query.list();
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
     @Override
     public boolean existsCustomerByPhoneNumber(String phoneNumber) throws SQLException {
-        ResultSet resultSet = SQLUtil.execute("SELECT * FROM customer WHERE phone = ?", phoneNumber);
-//        if (resultSet.next()){
-//            return true;
-//        }
-//        return false;
-
-        return resultSet.next();
+        Session session = factoryConfiguration.getSession();
+        Query<Customer> query = session.createQuery("from Customer where phone = ?", Customer.class);
+        query.setParameter(1, phoneNumber);
+        session.close();
+        return !query.list().isEmpty();
     }
 }
