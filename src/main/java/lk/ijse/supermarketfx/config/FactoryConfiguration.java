@@ -6,7 +6,6 @@ import lk.ijse.supermarketfx.entity.Order;
 import lk.ijse.supermarketfx.entity.OrderDetail;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-
 import org.hibernate.cfg.Configuration;
 
 public class FactoryConfiguration {
@@ -26,11 +25,12 @@ public class FactoryConfiguration {
     }
 
     public static FactoryConfiguration getInstance() {
-        return (factoryConfiguration == null) ? factoryConfiguration = new FactoryConfiguration() : factoryConfiguration;
+        return factoryConfiguration == null ? factoryConfiguration = new FactoryConfiguration() : factoryConfiguration;
     }
 
-    public Session getSession() {
+    public Session getSession(){
         Session session = sessionFactory.openSession();
         return session;
     }
+
 }
