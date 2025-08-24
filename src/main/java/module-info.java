@@ -6,6 +6,7 @@ module lk.ijse.supermarketfx {
     requires net.sf.jasperreports.core;
     requires java.mail;
     requires org.hibernate.orm.core;
+    requires jakarta.persistence;
 
     opens lk.ijse.supermarketfx.controller to javafx.fxml;
     opens lk.ijse.supermarketfx.dto.tm to javafx.base;
