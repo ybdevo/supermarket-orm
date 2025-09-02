@@ -111,20 +111,18 @@ public class CustomerDAOImpl implements CustomerDAO {
     @Override
     public List<Customer> search(String text) throws SQLException {
         String searchText = "%" + text + "%";
-        ResultSet resultSet = SQLUtil.execute(
-                "SELECT * FROM customer WHERE customer_id LIKE ? OR name LIKE ? OR nic LIKE ? OR email LIKE ? OR phone LIKE ?",
-                searchText, searchText, searchText, searchText, searchText
-        );
-
         Session session = factoryConfiguration.getSession();
-        Query <Customer> query = session.createQuery("FROM Customer WHERE id LIKE ? OR name LIKE ? OR nic LIKE ? OR email LIKE ? OR phone LIKE ?", Customer.class);
-        query.setParameter(1, "%something%");
-        query.setParameter(2, "%something%");
-        query.setParameter(3, "%something%");
-        query.setParameter(4, "%something%");
-        query.setParameter(5, "%something%");
-        session.close();
-        return query.list();
+       try {
+           Query <Customer> query = session.createQuery("" +
+                           "FROM Customer c WHERE c.id OR " +
+                           "c.name LIKE :text OR c.nic LIKE :text OR " +
+                           "c.email LIKE :text OR c.phone LIKE :text",
+                   Customer.class);
+           query.setParameter("text", searchText);
+           return query.list();
+       } finally {
+           session.close();
+       }
     }
 
     @Override
