@@ -22,11 +22,11 @@ import java.util.ArrayList;
 
 public class AppInitializer extends Application {
     public static void main(String[] args) {
-        CustomerDAO customerDAO_1 = DAOFactory.getInstance().getDAO(DAOTypes.CUSTOMER);
-        CustomerDAO customerDAO_2 = DAOFactory.getInstance().getDAO(DAOTypes.CUSTOMER);
-
-        Object object = new ArrayList<>();
-        launch(args);
+//        CustomerDAO customerDAO_1 = DAOFactory.getInstance().getDAO(DAOTypes.CUSTOMER);
+//        CustomerDAO customerDAO_2 = DAOFactory.getInstance().getDAO(DAOTypes.CUSTOMER);
+//
+//        Object object = new ArrayList<>();
+//        launch(args);
     }
 
     @Override

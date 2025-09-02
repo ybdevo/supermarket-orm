@@ -33,4 +33,7 @@ public class FactoryConfiguration {
         return session;
     }
 
+    public Session getCurrentSession() {
+        return sessionFactory.getCurrentSession();
+    }
 }

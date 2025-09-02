@@ -2,6 +2,7 @@ package lk.ijse.supermarketfx.bo.custom.impl;
 
 import lk.ijse.supermarketfx.bo.custom.PlaceOrderBO;
 import lk.ijse.supermarketfx.bo.exception.NotFoundException;
+import lk.ijse.supermarketfx.config.FactoryConfiguration;
 import lk.ijse.supermarketfx.dao.DAOFactory;
 import lk.ijse.supermarketfx.dao.DAOTypes;
 import lk.ijse.supermarketfx.dao.custom.CustomerDAO;
@@ -16,6 +17,8 @@ import lk.ijse.supermarketfx.entity.Item;
 import lk.ijse.supermarketfx.entity.Order;
 import lk.ijse.supermarketfx.entity.OrderDetail;
 import lk.ijse.supermarketfx.util.CrudUtil;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -34,37 +37,108 @@ public class PlaceOrderBOImpl implements PlaceOrderBO {
 
     @Override
     public boolean placeOrder(OrderDTO dto) throws SQLException {
-        Connection connection = DBConnection.getInstance().getConnection();
+        Session currentSession = FactoryConfiguration.getInstance().getCurrentSession();
+        Transaction transaction = currentSession.beginTransaction();
         try {
-            connection.setAutoCommit(false);
+            Optional<Order> optionalOrder = orderDAO.findById(dto.getOrderId());
+            if (optionalOrder.isPresent()) {
+                transaction.rollback();
+                return false;
+            }
 
             Optional<Customer> optionalCustomer = customerDAO.findById(dto.getCustomerId());
             if (optionalCustomer.isEmpty()) {
-                throw new NotFoundException("Customer not found");
+                transaction.rollback();
+                return false;
             }
+
+            Customer customer = optionalCustomer.get();
 
             Order order = new Order();
             order.setId(dto.getOrderId());
-            order.setCustomerId(dto.getCustomerId());
             order.setOrderDate(dto.getDate());
+            order.setCustomer(customer);
+
+            List<OrderDetail> orderDetailsList = new ArrayList<>();
+            for (OrderDetailsDTO detailsDTO : dto.getCartList()) {
+                Optional<Item> optionalItem = itemDAO.findById(detailsDTO.getItemId());
+                if (optionalItem.isEmpty()) {
+                    transaction.rollback();
+                    return false;
+                }
+                Item item = optionalItem.get();
+
+                OrderDetail orderDetail = new OrderDetail();
+                orderDetail.setOrder(order);
+                orderDetail.setItem(item);
+                orderDetail.setQuantity(detailsDTO.getQty());
+                orderDetail.setPrice(BigDecimal.valueOf(detailsDTO.getPrice()));
+
+                orderDetailsList.add(orderDetail);
+            }
+
+            order.setOrderDetails(orderDetailsList);
 
             boolean isOrderSaved = orderDAO.save(order);
-            if (isOrderSaved) {
-                boolean isSuccess = saveDetailsAndUpdateItem(dto.getCartList());
-                if (isSuccess) {
-                    connection.commit();
-                    return true;
+            if (!isOrderSaved) {
+                transaction.rollback();
+                return false;
+            }
+
+            for (OrderDetail orderDetail : orderDetailsList) {
+                Item item = orderDetail.getItem();
+                if (item.getQuantity() < orderDetail.getQuantity()) {
+                    transaction.rollback();
+                    return false;
+                }
+
+                item.setQuantity(item.getQuantity() - orderDetail.getQuantity());
+
+                boolean isItemUpdated = itemDAO.reduceQty(item);
+                if (!isItemUpdated) {
+                    transaction.rollback();
+                    return false;
                 }
             }
-            connection.rollback();
-            return false;
-//            throw new Exception("Fail somthing");
+            transaction.commit();
+            return true;
         } catch (Exception e) {
-            connection.rollback();
+            transaction.rollback();
+            e.printStackTrace();
             return false;
-        } finally {
-            connection.setAutoCommit(true);
         }
+
+//        Connection connection = DBConnection.getInstance().getConnection();
+//        try {
+//            connection.setAutoCommit(false);
+//
+//            Optional<Customer> optionalCustomer = customerDAO.findById(dto.getCustomerId());
+//            if (optionalCustomer.isEmpty()) {
+//                throw new NotFoundException("Customer not found");
+//            }
+//
+//            Order order = new Order();
+//            order.setId(dto.getOrderId());
+//            order.setCustomerId(dto.getCustomerId());
+//            order.setOrderDate(dto.getDate());
+//
+//            boolean isOrderSaved = orderDAO.save(order);
+//            if (isOrderSaved) {
+//                boolean isSuccess = saveDetailsAndUpdateItem(dto.getCartList());
+//                if (isSuccess) {
+//                    connection.commit();
+//                    return true;
+//                }
+//            }
+//            connection.rollback();
+//            return false;
+////            throw new Exception("Fail somthing");
+//        } catch (Exception e) {
+//            connection.rollback();
+//            return false;
+//        } finally {
+//            connection.setAutoCommit(true);
+//        }
     }
 
     @Override

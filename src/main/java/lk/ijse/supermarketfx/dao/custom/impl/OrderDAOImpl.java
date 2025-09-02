@@ -32,17 +32,13 @@ public class OrderDAOImpl implements OrderDAO {
 
     @Override
     public boolean save(Order order) throws SQLException {
-        Session session = factoryConfiguration.getSession();
-        Transaction transaction = session.beginTransaction();
+        Session currentSession = FactoryConfiguration.getInstance().getCurrentSession();
         try {
-            session.persist(order);
-            transaction.commit();
+            currentSession.persist(order);
             return true;
         } catch (Exception e) {
-            transaction.rollback();
+            e.printStackTrace();
             return false;
-        } finally {
-            session.close();
         }
     }
 
