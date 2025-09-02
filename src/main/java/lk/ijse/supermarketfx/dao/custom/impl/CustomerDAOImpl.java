@@ -21,17 +21,23 @@ public class CustomerDAOImpl implements CustomerDAO {
     @Override
     public List<Customer> getAll() throws SQLException {
         Session session = factoryConfiguration.getSession();
-        Query<Customer> query = session.createQuery("from Customer", Customer.class);
-        session.close();
-        return query.list();
+        try {
+            Query<Customer> query = session.createQuery("from Customer", Customer.class);
+            return query.list();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public String getLastId() throws SQLException {
         Session session = factoryConfiguration.getSession();
-        String lastId = session.createQuery("SELECT c.id FROM Customer c ORDER BY c.id DESC", String.class).setMaxResults(1).uniqueResult();
-        session.close();
-        return lastId == null ? "C001" : lastId;
+        try {
+            Query<String> query = session.createQuery("SELECT c.id FROM Customer c ORDER BY c.id DESC", String.class).setMaxResults(1);
+            return query.list().isEmpty() ? null : query.list().get(0);
+        } finally {
+            session.close();
+        }
     }
 
     @Override
